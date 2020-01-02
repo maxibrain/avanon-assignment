@@ -1,10 +1,11 @@
-import { Component, ChangeDetectionStrategy, ViewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ViewChild, TemplateRef } from '@angular/core';
 import { StockService, Stock } from './stock.service';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-root',
@@ -23,9 +24,10 @@ export class AppComponent {
     })
   );
 
-  constructor(private stockService: StockService, private snackBar: MatSnackBar) {}
+  constructor(private stockService: StockService, private snackBar: MatSnackBar, private dialog: MatDialog) {}
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
+  @ViewChild('removeConfirmationDialog', { static: true, read: TemplateRef }) removeConfirmationDialog: TemplateRef<any>;
 
   private setStocks(stocks: Stock[]) {
     localStorage.setItem('stocks', JSON.stringify(stocks));
@@ -43,6 +45,10 @@ export class AppComponent {
   }
 
   remove(stock: Stock) {
-    this.setStocks(this.stocks$.value.filter(s => s !== stock));
+    this.dialog.open(this.removeConfirmationDialog, { data: stock }).afterClosed().subscribe(result => {
+      if (result) {
+        this.setStocks(this.stocks$.value.filter(s => s !== stock));
+      }
+    });
   }
 }
